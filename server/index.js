@@ -4,6 +4,7 @@ import redisClient from './config/redis.js';
 import { Server } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import http from 'http';
+import setupSocketEvents from './socket/socket.js';
 
 
 /**
@@ -21,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 /**
  * Socket.io setup
  */
-const pubClient = redisClient;
+const pubClient = redisClient.duplicate();
 const subClient = redisClient.duplicate();
 
 await Promise.all([
@@ -33,6 +34,8 @@ const io = new Server(server, {
     adapter: createAdapter(pubClient, subClient),
     path: '/api/socket.io'
 });
+
+setupSocketEvents(io, redisClient);
 
 
 //Start server

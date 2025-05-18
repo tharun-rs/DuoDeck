@@ -4,9 +4,10 @@ import "../styles/HomePage.css";
 const HomePage = () => {
     const [mode, setMode] = useState("new"); // 'new' or 'join'
     const [roomId, setRoomId] = useState("");
+    const [numPlayers, setNumPlayers] = useState(4);
 
     const handleStartGame = () => {
-        alert("Starting a new game!");
+        alert(`Starting a new game with ${numPlayers} players!`);
     };
 
     const handleJoinGame = () => {
@@ -55,6 +56,21 @@ const HomePage = () => {
                         className="room-input"
                         required
                     />
+                )}
+
+                {mode === "new" && (
+                    <div className="player-select-container">
+                        <label htmlFor="numPlayers">Number of Players:</label>
+                        <select
+                            id="numPlayers"
+                            value={numPlayers}
+                            onChange={e => setNumPlayers(parseInt(e.target.value))}
+                            className="player-select"
+                        >
+                            <option value={4}>4</option>
+                            <option value={6}>6</option>
+                        </select>
+                    </div>
                 )}
 
                 <button type="submit" className="submit-button">

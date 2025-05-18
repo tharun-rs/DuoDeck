@@ -90,3 +90,35 @@ body {
 .submit-button:hover {
     opacity: 0.9;
 }
+
+.player-select-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+.player-select-container label {
+    color: #ffffff;
+}
+
+.player-select {
+    padding: 0.8rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    width: 150px;
+    text-align: center;
+    cursor: pointer;
+    appearance: none;
+}
+
+.player-select:focus {
+    outline: none;
+    border-color: #02a58f;
+}

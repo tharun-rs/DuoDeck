@@ -18,6 +18,9 @@ class RedisManager {
         this.client.on('error', err => console.error("Error occured in Redis client: ",err));
     }
     async getClient() {
+        if (! this.client.isOpen) {
+            await this.client.connect();
+        }
         return this.client;
     }
 }
