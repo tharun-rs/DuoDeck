@@ -1,0 +1,92 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    background-color: #121212;
+    color: #ffffff;
+}
+
+.home-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #121212;
+}
+
+.home-title {
+    display: flex;
+    align-items: center;
+    font-size: 2.5rem;
+    color: #02a58f;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.logo-image {
+    width: 6vw;
+    height: 6vw;
+    object-fit: contain;
+}
+
+
+.game-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.mode-toggle {
+    display: flex;
+    gap: 1rem;
+}
+
+.toggle-button {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background-color: #1e1e1e;
+    color: #02a58f;
+    border: 2px solid #02a58f;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.toggle-button.active {
+    background-color: #02a58f;
+    color: #121212;
+}
+
+.toggle-button:hover {
+    opacity: 0.9;
+}
+
+.room-input {
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    width: 250px;
+}
+
+.submit-button {
+    padding: 1rem 2.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background-color: #02a58f;
+    color: #121212;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.submit-button:hover {
+    opacity: 0.9;
+}
