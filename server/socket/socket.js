@@ -1,3 +1,5 @@
+import startGame from "./utils";
+
 const setupSocketEvents = (io, redisClient) => {
     io.on("connection", (socket) => {
         socket.on("join-room", async ({roomId, roomSize, playerName}) => {
@@ -40,8 +42,8 @@ const setupSocketEvents = (io, redisClient) => {
                     io.to(roomId)
                 }
             }
-
             await redisClient.set(redisKey, JSON.stringify(room));
+            startGame(io, room);
         });
     });
 };
