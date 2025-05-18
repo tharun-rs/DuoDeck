@@ -1,33 +1,71 @@
-import { useState } from 'react';
-import { io } from 'socket.io-client';
+import { useEffect, useState } from 'react';
+import socket from './socket';
+import { useNavigate } from "react-router-dom";
 
-const SOCKET_URL = process.env.SOCKET_URL;
 
-const socket = io(SOCKET_URL, {
-    transports: ["websocket"]
-});
+const GameSocket = () => {
+    const [playerList, setPlayerList] = useState({});
+    const [hand, setHand] = useState([]);
+    const [playerName, setPlayerName] = useState("");
+    const [playersHandCount, setPlayersHandCount] = useState({});
+    const [currentPlayer, setCurrentPlayer] = useState("");
 
-const [playerList, setPlayerList] = useState({});
-const [cardList, setCardList] = useState();
+    const navigate = useNavigate();
 
-socket.on("player-list", (players) => {
-    setPlayerList(players);
-});
+    useEffect(() => {
+        socket.connect();
+        socket.on("players-list", (players) => {
+            console.log("Received players-list:", players);
+            setPlayerList(players);
+        });
 
-socket.on("cardList", (cards) => {
-    setCardList(cards);
-});
+        socket.on("player-hand", (cards) => {
+            console.log("Received player-hand:", cards);
+            setHand(cards);
+        });
 
-const emitEvents = {
-    joinRoom: (roomId, roomSize) => {
-        socket.emit("join-room", { roomId, roomSize });
-    },
+        socket.on("players-hand-count", (handCount) => {
+            console.log("Received players-hand-count:", handCount);
+            setPlayersHandCount(handCount);
+        });
 
-}
+        socket.on("current-player", (player) => {
+            console.log("Received current-player:", player);
+            setCurrentPlayer(player);
+        });
 
-export {
-    playerList,
-    cardList,
-    emitEvents
-}
+        socket.on("room-full", (message) => {
+            console.log("Received room-full:", message);
+            alert(message);
+            navigate("/");
+        });
 
+
+        return () => {
+            socket.disconnect();
+        };
+    }, []);
+
+    const emitEvents = {
+        joinRoom: (roomId, roomSize) => {
+            socket.emit("join-room", { roomId, roomSize, playerName });
+        },
+    };
+
+    return {
+        // Data
+        playerList,
+        hand,
+        playerName,
+        currentPlayer,
+        playersHandCount,
+
+        // Emit Events
+        emitEvents,
+
+        // State Setters
+        setPlayerName
+    };
+};
+
+export default GameSocket;

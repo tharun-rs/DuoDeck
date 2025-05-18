@@ -1,28 +1,33 @@
-import startGame from "./utils";
+import startGame from "./utils.js";
 
 const setupSocketEvents = (io, redisClient) => {
     io.on("connection", (socket) => {
-        socket.on("join-room", async ({roomId, roomSize, playerName}) => {
+        console.log("socket connected:", socket.id);
 
-            //Join room
-            socket.join(roomId);
+        socket.on("disconnect", (reason) => {
+            console.log("socket disconnected:", socket.id, "reason:", reason);
+        });
+        socket.on("join-room", async ({ roomId, roomSize, playerName }) => {
 
             //Store data on redis
             const redisKey = `room:${roomId}`;
-            const currentUser = { playerName, id: socket.id};
+            const currentUser = { playerName, id: socket.id };
 
             let roomStr = await redisClient.get(redisKey);
             let room;
 
-            //If game created
             if (roomStr == null) {
                 room = {
+                    roomId,
                     size: roomSize,
                     bluePlayers: [currentUser],
                     redPlayers: [],
                     status: "WAITING_FOR_PLAYERS"
                 };
                 await redisClient.set(redisKey, JSON.stringify(room));
+                //Join room
+                socket.join(roomId);
+                console.log(`${playerName} joined socket room: ${roomId}`);
                 return;
             }
 
@@ -39,11 +44,12 @@ const setupSocketEvents = (io, redisClient) => {
                 room.redPlayers.push(currentUser);
                 if (room.redPlayers.length === room.size / 2) {
                     room.status = "GAME_STARTED";
-                    io.to(roomId)
+                    startGame(io, room);
                 }
             }
+            socket.join(roomId);
+            console.log(`${playerName} joined socket room: ${roomId}`);
             await redisClient.set(redisKey, JSON.stringify(room));
-            startGame(io, room);
         });
     });
 };

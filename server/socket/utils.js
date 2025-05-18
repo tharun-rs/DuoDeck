@@ -1,7 +1,9 @@
-import redisClient from "../config/redis";
-import { dealCards } from "./game";
+import redisClient from "../config/redis.js";
+import { dealCards } from "./game.js";
+
 
 const startGame = async (io, room) => {
+    console.log("Starting game");
     const hands = dealCards(room);
     const handsCount = Object.fromEntries(
         Object.entries(hands).map(([playerName, cards]) => [playerName, cards.length])
@@ -10,11 +12,11 @@ const startGame = async (io, room) => {
     const playerDetails = [];
     const playerToTeamMapping = [];
     for (let i = 0; i < room.bluePlayers.length; i++) {
-        playerToTeamMapping.push({ playerName: room.bluePlayer[i].playerName, team: "blue" });
-        playerToTeamMapping.push({ playerName: room.redPlayer[i].playerName, team: "red" });
+        playerToTeamMapping.push({ playerName: room.bluePlayers[i].playerName, team: "blue" });
+        playerToTeamMapping.push({ playerName: room.redPlayers[i].playerName, team: "red" });
 
-        playerDetails.push({ id: room.bluePlayer[i].id, playerName: room.bluePlayer[i].playerName, team: "blue" });
-        playerDetails.push({ id: room.redPlayer[i].id, playerName: room.redPlayer[i].playerName, team: "red" });
+        playerDetails.push({ id: room.bluePlayers[i].id, playerName: room.bluePlayers[i].playerName, team: "blue" });
+        playerDetails.push({ id: room.redPlayers[i].id, playerName: room.redPlayers[i].playerName, team: "red" });
     }
 
     await redisClient.set(`room:${room.roomId}:players`, JSON.stringify(playerDetails));
@@ -23,8 +25,11 @@ const startGame = async (io, room) => {
 
 
     io.to(room.roomId).emit("players-list", playerToTeamMapping);
+    console.log("playertoteammapp", playerDetails);
+    console.log("room id: ", room.roomId);
     io.to(room.roomId).emit("current-player", playerToTeamMapping[0].playerName);
-    io.to(room.roomId).emit("player-hand-count", handsCount);
+    io.to(room.roomId).emit("players-hand-count", handsCount);
+    console.log("hand",hands);
 
     for (let i = 0; i < playerDetails.length; i++) {
         const player = playerDetails[i];
@@ -40,7 +45,7 @@ const startGame = async (io, room) => {
         }
     }
 
-    await redisClient.hset(`room:${room.roomId}:handscount`, handsCount); // store only count to display for all players
+    await redisClient.hSet(`room:${room.roomId}:handscount`, handsCount); // store only count to display for all players
     await redisClient.del(`room:${room.roomId}`); // delete room details once all players join
 };
 

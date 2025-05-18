@@ -5,6 +5,8 @@ import { Server } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import http from 'http';
 import setupSocketEvents from './socket/socket.js';
+import dotenv from "dotenv";
+dotenv.config();
 
 
 /**
@@ -15,7 +17,12 @@ const app = express();
 const port = process.env.PORT;
 const server = http.createServer(app);
 
-app.use(cors());
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
