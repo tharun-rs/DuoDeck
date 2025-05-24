@@ -90,6 +90,12 @@
     text-shadow: 0 0 3px black;
 }
 
+.set-card.missing.selected-missing {
+    box-shadow: 0 0 10px gold;
+    transform: scale(1.1);
+    z-index: 1;
+}
+
 .card-stack {
     display: grid;
     grid-template-columns: repeat(auto-fit, 6px); /* Overlap amount */
@@ -144,6 +150,11 @@
 
 .player-summary.blue {
     border-color: #3498db;
+}
+
+.player-summary.missing-card-selected {
+    border-color: gold;
+    border-style: dashed;
 }
 
 .highlight {

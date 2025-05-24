@@ -13,13 +13,16 @@ const PlayArea = () => {
     };
 
     const handleOpponentClick = (player) => {
-        console.log('Opponent clicked:', player);
+        if (selectedCard) {
+            console.log(`Requesting ${selectedCard} from ${player}`);
+            setSelectedCard(null);
+        }
         setSelectedPlayer(player === selectedPlayer ? null : player);
     };
     // Delete this section after integrating with backend
     const playerName = 'rst';
 
-    const hand = [
+    let hand = [
         '10_of_spades', '2_of_diamonds', '6_of_diamonds',
         'J_of_clubs', 'J_of_hearts', 'A_of_diamonds',
         '2_of_hearts', '9_of_diamonds', '4_of_clubs',
@@ -49,7 +52,8 @@ const PlayArea = () => {
             set.cards.some(card => hand.includes(card))
         );
         setActiveSets(setsWithMatches);
-    }, [hand]);
+    }, []);
+    //}, [hand]); //uncomment this after connecting socket
 
     const renderCardSet = (set) => {
         return (
@@ -62,8 +66,11 @@ const PlayArea = () => {
                                 key={card}
                                 src={`/cards/${card}.png`}
                                 alt={card}
-                                className={`set-card ${isAvailable ? 'available' : 'missing'}`}
+                                className={`set-card ${isAvailable ? 'available' :
+                                    `missing ${selectedCard === card ? 'selected-missing' : ''}`}`}
                                 title={isAvailable ? card : `Missing: ${card}`}
+                                onClick={!isAvailable ? () => handleCardClick(card) : undefined}
+                                style={{ cursor: !isAvailable ? 'pointer' : 'default' }}
                             />
                         );
                     })}
@@ -107,9 +114,11 @@ const PlayArea = () => {
                         return (
                             <div
                                 key={player}
-                                className={`player-summary ${teamColor}`}
+                                className={`player-summary ${teamColor} ${selectedCard&&isOpponent ? 'missing-card-selected' : ''}`}
                                 onClick={() => handleOpponentClick(player)}
-                                style={{ cursor: isOpponent ? 'pointer' : 'default' }}
+                                style={{
+                                    cursor: selectedCard&&isOpponent ? 'pointer' : 'default',
+                                }}
                             >
                                 <h4 className={isCurrent ? "highlight" : ""}>
                                     {player} - {count} cards
