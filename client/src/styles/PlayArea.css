@@ -40,6 +40,54 @@
     border-radius: 4px;
     border: 1px solid #02a58f;
     background-color: #ffffff;
+    transition: transform 0.2s;
+    margin: 0 2px;
+}
+
+.card-image:hover {
+    transform: translateY(-10px);
+}
+
+.card-image.selected {
+    transform: translateY(-20px);
+    box-shadow: 0 0 10px gold;
+}
+
+.set-card {
+    width: 6vw;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid #02a58f;
+    background-color: #ffffff;
+    transition: transform 0.2s;
+    margin: 0 2px;
+    transition: all 0.2s;
+    position: relative;
+}
+
+/* For cards that ARE in the hand */
+.set-card.available {
+    opacity: 1;
+    border: 2px solid transparent;
+}
+
+/* For cards NOT in the hand */
+.set-card.missing {
+    opacity: 0.5;
+    filter: grayscale(80%);
+    border: 2px dashed #ccc;
+}
+
+/* Optional: Add a "missing" overlay icon */
+.set-card.missing::after {
+    content: "✖";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: red;
+    font-size: 24px;
+    text-shadow: 0 0 3px black;
 }
 
 .card-stack {
@@ -79,8 +127,12 @@
     height: auto;
     flex-direction: column;
     align-items: flex-start;
+    transition: all 0.2s;
 }
 
+.player-summary:hover {
+    transform: scale(1.02);
+}
 
 .player-summary h4 {
     margin: 0;

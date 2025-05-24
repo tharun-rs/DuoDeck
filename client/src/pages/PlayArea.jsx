@@ -1,14 +1,29 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/PlayArea.css";
+import cardSets from '../data/cardSet.json';
 
 const PlayArea = () => {
+    const [selectedCard, setSelectedCard] = useState(null);
+    const [selectedPlayer, setSelectedPlayer] = useState(null);
+    const [activeSets, setActiveSets] = useState([]);
+
+    const handleCardClick = (card) => {
+        console.log('Card clicked:', card);
+        setSelectedCard(card === selectedCard ? null : card);
+    };
+
+    const handleOpponentClick = (player) => {
+        console.log('Opponent clicked:', player);
+        setSelectedPlayer(player === selectedPlayer ? null : player);
+    };
+    // Delete this section after integrating with backend
     const playerName = 'rst';
 
     const hand = [
         '10_of_spades', '2_of_diamonds', '6_of_diamonds',
         'J_of_clubs', 'J_of_hearts', 'A_of_diamonds',
         '2_of_hearts', '9_of_diamonds', '4_of_clubs',
-        '10_of_diamonds', '8_of_spades', 'Q_of_hearts', 'Q_of_diamonds', 'joker_black'
+        '10_of_diamonds', '8_of_spades', 'Q_of_hearts', 'Q_of_diamonds', 'joker_black',
     ];
 
     const currentPlayer = 'varsha';
@@ -27,9 +42,45 @@ const PlayArea = () => {
         { playerName: "ansh", team: "red" },
     ];
 
+    // Delete uptil this
+
+    useEffect(() => {
+        const setsWithMatches = cardSets.sets.filter(set =>
+            set.cards.some(card => hand.includes(card))
+        );
+        setActiveSets(setsWithMatches);
+    }, [hand]);
+
+    const renderCardSet = (set) => {
+        return (
+            <div key={set.name} className="card-set">
+                <div className="set-cards">
+                    {set.cards.map(card => {
+                        const isAvailable = hand.includes(card);
+                        return (
+                            <img
+                                key={card}
+                                src={`/cards/${card}.png`}
+                                alt={card}
+                                className={`set-card ${isAvailable ? 'available' : 'missing'}`}
+                                title={isAvailable ? card : `Missing: ${card}`}
+                            />
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
     const getTeamColor = (name) => {
         const player = playerList.find(p => p.playerName === name);
-        return player?.team || 'neutral';
+        const thisPlayer = playerList.find(p => p.playerName === playerName);
+        if (thisPlayer.team === player.team) {
+            return [player.team, false];
+        }
+        else {
+            return [player.team, true];
+        }
     };
 
     return (
@@ -38,28 +89,27 @@ const PlayArea = () => {
             <div className="game-layout">
                 <div className="current-player-pane">
                     <h3>Your Hand</h3>
-                    <div className="cards-container">
-                        {hand.map((card, index) => (
-                            <img
-                                key={index}
-                                src={`/cards/${card}.png`}
-                                alt={card}
-                                className="card-image"
-                            />
-                        ))}
+                    <div className="sets-container">
+                        {activeSets.length > 0 ? (
+                            activeSets.map(renderCardSet)
+                        ) : (
+                            <p>No Cards available</p>
+                        )}
                     </div>
                 </div>
                 <div className="other-players-pane">
                     {Object.entries(playersHandCount).map(([player, count]) => {
                         if (player === playerName) return null;
 
-                        const teamColor = getTeamColor(player);
+                        const [teamColor, isOpponent] = getTeamColor(player);
                         const isCurrent = player === currentPlayer;
 
                         return (
                             <div
                                 key={player}
                                 className={`player-summary ${teamColor}`}
+                                onClick={() => handleOpponentClick(player)}
+                                style={{ cursor: isOpponent ? 'pointer' : 'default' }}
                             >
                                 <h4 className={isCurrent ? "highlight" : ""}>
                                     {player} - {count} cards
