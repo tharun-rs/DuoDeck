@@ -1,3 +1,10 @@
+body, html {
+    overflow: hidden; 
+    height: 100%; 
+    margin: 0;
+    padding: 0;
+}
+
 .play-area {
     padding: 20px;
     font-family: sans-serif;
@@ -6,12 +13,14 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .current-player-header {
     text-align: center;
     margin-bottom: 20px;
     color: #02a58f;
+    height: 10vh;
 }
 
 .game-layout {
@@ -21,10 +30,18 @@
 
 .current-player-pane {
     flex: 1;
-    padding: 20px;
+    padding-bottom: 40px;
+    height: 80vh;
     border-right: 2px solid #02a58f;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    min-height: 0;
+    scroll-behavior: smooth;
+}
+
+.current-player-pane::-webkit-scrollbar {
+    display: none;
 }
 
 .cards-container {
@@ -98,10 +115,12 @@
 
 .card-stack {
     display: grid;
-    grid-template-columns: repeat(auto-fit, 6px); /* Overlap amount */
+    grid-template-columns: repeat(auto-fit, 6px);
+    /* Overlap amount */
     height: 20vh;
     margin-top: 10px;
-    width: calc(6vw + (6px * (var(--card-count, 1) - 1))); /* Dynamic width */
+    width: calc(6vw + (6px * (var(--card-count, 1) - 1)));
+    /* Dynamic width */
 }
 
 .card-back {
