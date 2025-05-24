@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import "../styles/HomePage.css";
 import { generateRoomId } from "../utils/utilfunctions";
-import GameSocket from "../utils/GameSocket";
+import { useGameSocket } from "../utils/GameSocket";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
     //import sockets
@@ -9,22 +10,24 @@ const HomePage = () => {
         emitEvents,
         playerName,
         setPlayerName,
-    } = GameSocket();
+    } = useGameSocket();
 
     const [mode, setMode] = useState("new"); // 'new' or 'join'
     const [roomId, setRoomId] = useState("");
     const [numPlayers, setNumPlayers] = useState(4);
 
+    const navigate = useNavigate();
+
     const handleStartGame = () => {
         const room_id = generateRoomId();
         setRoomId(room_id)
         emitEvents.joinRoom(room_id, numPlayers);
-        alert(`Starting a new game with ${numPlayers} players!`);
+        navigate("/play");
     };
 
     const handleJoinGame = () => {
         emitEvents.joinRoom(roomId, "");
-        alert(`Joining game with Room ID: ${roomId}`);
+        navigate("/play");
     };
 
     const handleSubmit = e => {

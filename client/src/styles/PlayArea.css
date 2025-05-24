@@ -1,0 +1,100 @@
+.play-area {
+    padding: 20px;
+    font-family: sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.current-player-header {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #02a58f;
+}
+
+.game-layout {
+    display: flex;
+    height: 100%;
+}
+
+.current-player-pane {
+    flex: 1;
+    padding: 20px;
+    border-right: 2px solid #02a58f;
+    display: flex;
+    flex-direction: column;
+}
+
+.cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.card-image {
+    width: 6vw;
+    height: auto;
+    border-radius: 4px;
+    border: 1px solid #02a58f;
+    background-color: #ffffff;
+}
+
+.card-stack {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 6px); /* Overlap amount */
+    height: 20vh;
+    margin-top: 10px;
+    width: calc(6vw + (6px * (var(--card-count, 1) - 1))); /* Dynamic width */
+}
+
+.card-back {
+    width: 6vw;
+    height: auto;
+    grid-row: 1;
+    grid-column: var(--card-index, 1);
+    border-radius: 4px;
+    background-color: #ffffff;
+    border: 1px solid #02a58f;
+}
+
+.other-players-pane {
+    flex: 1;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    align-content: start;
+    height: fit-content;
+}
+
+.player-summary {
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #1e1e1e;
+    border: 2px solid transparent;
+    display: flex;
+    height: auto;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+
+.player-summary h4 {
+    margin: 0;
+}
+
+.player-summary.red {
+    border-color: #e74c3c;
+}
+
+.player-summary.blue {
+    border-color: #3498db;
+}
+
+.highlight {
+    font-weight: bold;
+    color: #02a58f;
+}

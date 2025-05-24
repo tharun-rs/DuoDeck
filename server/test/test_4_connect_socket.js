@@ -1,7 +1,7 @@
 import io from "socket.io-client";
 
 const SOCKET_URL = "http://localhost:5000"; // Replace with your backend URL
-const ROOM_ID = "test-room-123";
+const ROOM_ID = "7d306";
 const ROOM_SIZE = 4;
 
 // Simulate 4 players joining
