@@ -19,9 +19,7 @@ const startGame = async (io, room) => {
         playerDetails.push({ id: room.redPlayers[i].id, playerName: room.redPlayers[i].playerName, team: "red" });
     }
 
-    await redisClient.set(`room:${room.roomId}:players`, JSON.stringify(playerDetails));
-    await redisClient.set(`room:${room.roomId}:currentPlayer`, 1);
-    await redisClient.set(`room:${room.roomId}:size`, room.size);
+    await redisClient.set(`room:${room.roomId}:currentPlayer`, playerToTeamMapping[0].playerName);
 
 
     io.to(room.roomId).emit("players-list", playerToTeamMapping);
@@ -29,7 +27,7 @@ const startGame = async (io, room) => {
     console.log("room id: ", room.roomId);
     io.to(room.roomId).emit("current-player", playerToTeamMapping[0].playerName);
     io.to(room.roomId).emit("players-hand-count", handsCount);
-    console.log("hand",hands);
+    console.log("hand", hands);
 
     for (let i = 0; i < playerDetails.length; i++) {
         const player = playerDetails[i];
@@ -41,7 +39,9 @@ const startGame = async (io, room) => {
         // Store player's hand in Redis as a Set
         const redisKey = `room:${room.roomId}:hand:${player.playerName}`;
         if (playerHand && playerHand.length > 0) {
-            await redisClient.sAdd(redisKey, ...playerHand);
+            for (const card of playerHand) {
+                await redisClient.sAdd(redisKey, card);
+            }
         }
     }
 
@@ -50,4 +50,6 @@ const startGame = async (io, room) => {
 };
 
 
-export default startGame;
+export {
+    startGame
+};

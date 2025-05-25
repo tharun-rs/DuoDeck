@@ -1,0 +1,2 @@
+1. set ttl for redis set operations
+2. implement in memory caching, and ensure consistency accross redis and cache

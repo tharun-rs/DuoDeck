@@ -10,6 +10,7 @@ const HomePage = () => {
         emitEvents,
         playerName,
         setPlayerName,
+        setSocketRoomID,
     } = useGameSocket();
 
     const [mode, setMode] = useState("new"); // 'new' or 'join'
@@ -22,11 +23,13 @@ const HomePage = () => {
         const room_id = generateRoomId();
         setRoomId(room_id)
         emitEvents.joinRoom(room_id, numPlayers);
+        setSocketRoomID(room_id)
         navigate("/play");
     };
 
     const handleJoinGame = () => {
         emitEvents.joinRoom(roomId, "");
+        setSocketRoomID(roomId);
         navigate("/play");
     };
 

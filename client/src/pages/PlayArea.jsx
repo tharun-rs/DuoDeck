@@ -1,60 +1,53 @@
 import React, { useState, useEffect } from "react";
 import "../styles/PlayArea.css";
 import cardSets from '../data/cardSet.json';
+import { useGameSocket } from "../utils/GameSocket";
 
 const PlayArea = () => {
+    // ----------------------------------socket---------------------------------------------------------
+    const {
+        playerName,
+        hand,
+        playerList,
+        currentPlayer,
+        playersHandCount,
+        socketRoomID,
+
+        emitEvents,
+    } = useGameSocket();
+
+    // ------------------------------------Use State variables-----------------------------------------------
     const [selectedCard, setSelectedCard] = useState(null);
-    const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [activeSets, setActiveSets] = useState([]);
 
+    // -------------------------------------Use Effects---------------------------------------------------------
+    useEffect(() => {
+        const setsWithMatches = cardSets.sets.filter(set =>
+            set.cards.some(card => hand.includes(card))
+        );
+        setActiveSets(setsWithMatches);
+    }, [hand]);
+
+    // -------------------------------------------Handlers--------------------------------------------------------
     const handleCardClick = (card) => {
         console.log('Card clicked:', card);
         setSelectedCard(card === selectedCard ? null : card);
     };
 
     const handleOpponentClick = (player) => {
+        console.log(currentPlayer);
+        console.log(playerName);
+        if (playerName != currentPlayer){
+            alert("Not your turn!!");
+            return;
+        }
         if (selectedCard) {
-            console.log(`Requesting ${selectedCard} from ${player}`);
+            emitEvents.reqCard(selectedCard,  player);
             setSelectedCard(null);
         }
-        setSelectedPlayer(player === selectedPlayer ? null : player);
-    };
-    // Delete this section after integrating with backend
-    const playerName = 'rst';
-
-    let hand = [
-        '10_of_spades', '2_of_diamonds', '6_of_diamonds',
-        'J_of_clubs', 'J_of_hearts', 'A_of_diamonds',
-        '2_of_hearts', '9_of_diamonds', '4_of_clubs',
-        '10_of_diamonds', '8_of_spades', 'Q_of_hearts', 'Q_of_diamonds', 'joker_black',
-    ];
-
-    const currentPlayer = 'varsha';
-
-    const playersHandCount = {
-        'rst': 14,
-        'varsha': 13,
-        'ansh': 14,
-        'vikrant': 13,
     };
 
-    const playerList = [
-        { playerName: "rst", team: "blue" },
-        { playerName: "vikrant", team: "red" },
-        { playerName: "varsha", team: "blue" },
-        { playerName: "ansh", team: "red" },
-    ];
-
-    // Delete uptil this
-
-    useEffect(() => {
-        const setsWithMatches = cardSets.sets.filter(set =>
-            set.cards.some(card => hand.includes(card))
-        );
-        setActiveSets(setsWithMatches);
-    }, []);
-    //}, [hand]); //uncomment this after connecting socket
-
+    // ----------------------------------------------Renderers---------------------------------------------------
     const renderCardSet = (set) => {
         return (
             <div key={set.name} className="card-set">
@@ -79,6 +72,7 @@ const PlayArea = () => {
         );
     };
 
+    // ----------------------------------------Utility Methods----------------------------------------------------
     const getTeamColor = (name) => {
         const player = playerList.find(p => p.playerName === name);
         const thisPlayer = playerList.find(p => p.playerName === playerName);
@@ -90,9 +84,10 @@ const PlayArea = () => {
         }
     };
 
+    // ---------------------------------------------Return----------------------------------------------------------
     return (
         <div className="play-area">
-            <h2 className="current-player-header">Current Player: {currentPlayer}</h2>
+            <h2 className="current-player-header">Room ID: {socketRoomID}   |   Current Player: {currentPlayer}</h2>
             <div className="game-layout">
                 <div className="current-player-pane">
                     <h3>Your Hand</h3>
@@ -114,10 +109,10 @@ const PlayArea = () => {
                         return (
                             <div
                                 key={player}
-                                className={`player-summary ${teamColor} ${selectedCard&&isOpponent ? 'missing-card-selected' : ''}`}
+                                className={`player-summary ${teamColor} ${selectedCard && isOpponent ? 'missing-card-selected' : ''}`}
                                 onClick={() => handleOpponentClick(player)}
                                 style={{
-                                    cursor: selectedCard&&isOpponent ? 'pointer' : 'default',
+                                    cursor: selectedCard && isOpponent ? 'pointer' : 'default',
                                 }}
                             >
                                 <h4 className={isCurrent ? "highlight" : ""}>

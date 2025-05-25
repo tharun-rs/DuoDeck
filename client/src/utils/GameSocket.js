@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import socket from './socket';
 
 const SocketContext = createContext();
@@ -9,7 +11,7 @@ export const GameSocket = ({ children }) => {
     const [playerName, setPlayerName] = useState("");
     const [playersHandCount, setPlayersHandCount] = useState({});
     const [currentPlayer, setCurrentPlayer] = useState("");
-    const [roomFull, setRoomFull] = useState(false);
+    const [socketRoomID, setSocketRoomID] = useState("");
 
     useEffect(() => {
         socket.connect();
@@ -30,9 +32,16 @@ export const GameSocket = ({ children }) => {
         });
 
         socket.on("room-full", (message) => {
-            alert(message);
+            toast.error(message);
         });
 
+        socket.on("backend-error", (message) => {
+            toast.error(message);
+        });
+
+        socket.on("card-transferred", ({from, to, card}) => {
+            toast.info(`${to} got ${card} from ${from}`);
+        });
 
         return () => {
             socket.disconnect();
@@ -43,6 +52,9 @@ export const GameSocket = ({ children }) => {
         joinRoom: (roomId, roomSize) => {
             socket.emit("join-room", { roomId, roomSize, playerName });
         },
+        reqCard: (cardName, targetPlayer) => {
+            socket.emit("request-card", { cardName, targetPlayer });
+        }
     };
 
     return (
@@ -54,12 +66,14 @@ export const GameSocket = ({ children }) => {
                 playerName,
                 currentPlayer,
                 playersHandCount,
+                socketRoomID,
 
                 // Emit Events
                 emitEvents,
 
                 // State Setters
-                setPlayerName
+                setPlayerName,
+                setSocketRoomID
             }}
         >
             {children}
