@@ -1,5 +1,6 @@
 import redisClient from "../config/redis.js";
 import { dealCards } from "./game.js";
+import cardSets from "../config/cardSet.json" assert { type: "json" };
 
 
 const startGame = async (io, room) => {
@@ -20,6 +21,7 @@ const startGame = async (io, room) => {
     }
 
     await redisClient.set(`room:${room.roomId}:currentPlayer`, playerToTeamMapping[0].playerName);
+    await redisClient.set(`room:${room.roomId}:players`, JSON.stringify(playerDetails));
 
 
     io.to(room.roomId).emit("players-list", playerToTeamMapping);
@@ -27,6 +29,7 @@ const startGame = async (io, room) => {
     console.log("room id: ", room.roomId);
     io.to(room.roomId).emit("current-player", playerToTeamMapping[0].playerName);
     io.to(room.roomId).emit("players-hand-count", handsCount);
+    io.to(room.roomId).emit("score-update", { blue: 0, red: 0 });
     console.log("hand", hands);
 
     for (let i = 0; i < playerDetails.length; i++) {
@@ -47,9 +50,15 @@ const startGame = async (io, room) => {
 
     await redisClient.hSet(`room:${room.roomId}:handscount`, handsCount); // store only count to display for all players
     await redisClient.del(`room:${room.roomId}`); // delete room details once all players join
+    await redisClient.set(`room:${room.roomId}:score`, JSON.stringify({ blue: 0, red: 0 })); // initialize score
 };
 
 
+const getSetById = (setID) => {
+    return cardSets.sets.find(set => set.id === setID);
+};
+
 export {
-    startGame
+    startGame,
+    getSetById
 };

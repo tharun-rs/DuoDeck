@@ -1,4 +1,4 @@
-import { startGame } from "./utils.js";
+import { startGame, getSetById } from "./utils.js";
 
 const setupSocketEvents = (io, redisClient) => {
     io.on("connection", (socket) => {
@@ -131,8 +131,95 @@ const setupSocketEvents = (io, redisClient) => {
 
         // -----------------------------------------------Drop Set---------------------------------------------------------------
 
-        socket.on("drop-set", ({teamName, setName}) => {
-            
+        socket.on("drop-set", async ({ teamName, setID }) => {
+            try {
+                const rooms = Array.from(socket.rooms);
+                const roomId = rooms[1];
+                if (!roomId || !teamName || !setID) return;
+
+                const set = getSetById(setID);
+                if (!set) {
+                    socket.emit("set-drop-result", { success: false, reason: "Invalid set ID" });
+                    return;
+                }
+
+                // Get all players in the team
+                const playersRaw = await redisClient.get(`room:${roomId}:players`);
+                if (!playersRaw) return;
+                const players = JSON.parse(playersRaw);
+
+                const teamPlayers = players.filter(p => p.team === teamName);
+                const opponentTeam = teamName === "blue" ? "red" : "blue";
+
+                const allCardsInHand = new Set();
+
+                for (const player of teamPlayers) {
+                    const redisKey = `room:${roomId}:hand:${player.playerName}`;
+                    const hand = await redisClient.sMembers(redisKey);
+                    hand.forEach(card => allCardsInHand.add(card));
+                }
+
+                const missingCards = set.cards.filter(card => !allCardsInHand.has(card));
+
+                if (missingCards.length > 0) {
+                    socket.emit("set-drop-result", {
+                        success: false,
+                        reason: "Missing cards"
+                    });
+                    // set score to oponent team
+                    const scoreKey = `room:${roomId}:score`;
+                    const scoreRaw = await redisClient.get(scoreKey);
+                    const score = scoreRaw ? JSON.parse(scoreRaw) : { blue: 0, red: 0 };
+
+                    score[opponentTeam] += 1;
+                    await redisClient.set(scoreKey, JSON.stringify(score));
+
+                    io.to(roomId).emit("score-update", score);
+                } else {
+                    io.to(roomId).emit("set-drop-result", {
+                        success: true,
+                        team: teamName,
+                    });
+                    // set score to oponent team
+                    const scoreKey = `room:${roomId}:score`;
+                    const scoreRaw = await redisClient.get(scoreKey);
+                    const score = scoreRaw ? JSON.parse(scoreRaw) : { blue: 0, red: 0 };
+
+                    score[teamName] += 1;
+                    await redisClient.set(scoreKey, JSON.stringify(score));
+
+                    io.to(roomId).emit("score-update", score);
+                }
+
+                // All cards present — remove them from Redis
+                const handsCountKey = `room:${roomId}:handscount`;
+
+                for (const player of players) {
+                    const redisKey = `room:${roomId}:hand:${player.playerName}`;
+                    for (const card of set.cards) {
+                        const removed = await redisClient.sRem(redisKey, card);
+                        if (removed) {
+                            await redisClient.hIncrBy(handsCountKey, player.playerName, -1);
+                        }
+                    }
+                }
+
+                // Emit updated hands count
+                const handsCount = await redisClient.hGetAll(handsCountKey);
+                io.to(roomId).emit("players-hand-count", handsCount);
+
+                // send hands of each player seperately
+                for (const player of players) {
+                    const redisKey = `room:${roomId}:hand:${player.playerName}`;
+                    const updatedHand = await redisClient.sMembers(redisKey);
+                    const playerSocketId = await redisClient.get(`room:${roomId}:player:${player.playerName}:socket`);
+                    io.to(playerSocketId).emit("player-hand", updatedHand);
+                }
+
+            } catch (error) {
+                console.error("Error dropping set:", error);
+                socket.emit("backend-error", "Failed to drop set");
+            }
         });
     });
 };

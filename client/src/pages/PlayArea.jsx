@@ -37,7 +37,7 @@ const PlayArea = () => {
     const handleOpponentClick = (player) => {
         console.log(currentPlayer);
         console.log(playerName);
-        if (playerName != currentPlayer){
+        if (playerName !== currentPlayer){
             alert("Not your turn!!");
             return;
         }
@@ -87,7 +87,7 @@ const PlayArea = () => {
     // ---------------------------------------------Return----------------------------------------------------------
     return (
         <div className="play-area">
-            <h2 className="current-player-header">Room ID: {socketRoomID}   |   Current Player: {currentPlayer}</h2>
+            <h2 className="current-player-header">Room ID: {socketRoomID} | Current Player: {currentPlayer}</h2>
             <div className="game-layout">
                 <div className="current-player-pane">
                     <h3>Your Hand</h3>
