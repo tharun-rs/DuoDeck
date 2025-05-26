@@ -12,6 +12,8 @@ export const GameSocket = ({ children }) => {
     const [playersHandCount, setPlayersHandCount] = useState({});
     const [currentPlayer, setCurrentPlayer] = useState("");
     const [socketRoomID, setSocketRoomID] = useState("");
+    const [blueScore, setBlueScore] = useState(0);
+    const [redScore, setRedScore] = useState(0);
 
     useEffect(() => {
         socket.connect();
@@ -39,8 +41,13 @@ export const GameSocket = ({ children }) => {
             toast.error(message);
         });
 
-        socket.on("card-transferred", ({from, to, card}) => {
+        socket.on("card-transferred", ({ from, to, card }) => {
             toast.info(`${to} got ${card} from ${from}`);
+        });
+
+        socket.on("score-update", (scores) => {
+            setBlueScore(scores.blue);
+            setRedScore(scores.red);
         });
 
         return () => {
@@ -54,7 +61,10 @@ export const GameSocket = ({ children }) => {
         },
         reqCard: (cardName, targetPlayer) => {
             socket.emit("request-card", { cardName, targetPlayer });
-        }
+        },
+        dropCard: (teamName, setID) => {
+            socket.emit("drop-set", { teamName, setID });
+        },
     };
 
     return (
@@ -67,6 +77,8 @@ export const GameSocket = ({ children }) => {
                 currentPlayer,
                 playersHandCount,
                 socketRoomID,
+                blueScore,
+                redScore,
 
                 // Emit Events
                 emitEvents,

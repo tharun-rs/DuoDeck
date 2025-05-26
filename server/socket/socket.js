@@ -85,7 +85,7 @@ const setupSocketEvents = (io, redisClient) => {
                 const hasCard = await redisClient.sIsMember(targetPlayerHandKey, cardName);
                 if (!hasCard) {
                     io.to(roomId).emit("current-player", targetPlayer);
-                    await redisClient.set(`room:${room.roomId}:currentPlayer`, targetPlayer);
+                    await redisClient.set(`room:${roomId}:currentPlayer`, targetPlayer);
                     return socket.emit("backend-error", "Card not available");
                 }
 
@@ -132,6 +132,7 @@ const setupSocketEvents = (io, redisClient) => {
         // -----------------------------------------------Drop Set---------------------------------------------------------------
 
         socket.on("drop-set", async ({ teamName, setID }) => {
+            console.log("Drop set event received:", teamName, setID);
             try {
                 const rooms = Array.from(socket.rooms);
                 const roomId = rooms[1];
@@ -142,6 +143,7 @@ const setupSocketEvents = (io, redisClient) => {
                     socket.emit("set-drop-result", { success: false, reason: "Invalid set ID" });
                     return;
                 }
+                console.log("set details:", set);
 
                 // Get all players in the team
                 const playersRaw = await redisClient.get(`room:${roomId}:players`);
@@ -160,7 +162,7 @@ const setupSocketEvents = (io, redisClient) => {
                 }
 
                 const missingCards = set.cards.filter(card => !allCardsInHand.has(card));
-
+                console.log("Missing cards:", missingCards);
                 if (missingCards.length > 0) {
                     socket.emit("set-drop-result", {
                         success: false,
@@ -176,10 +178,12 @@ const setupSocketEvents = (io, redisClient) => {
 
                     io.to(roomId).emit("score-update", score);
                 } else {
+                    console.log("All cards present, dropping set");
                     io.to(roomId).emit("set-drop-result", {
                         success: true,
                         team: teamName,
                     });
+                    console.log("Set dropped successfully");
                     // set score to oponent team
                     const scoreKey = `room:${roomId}:score`;
                     const scoreRaw = await redisClient.get(scoreKey);

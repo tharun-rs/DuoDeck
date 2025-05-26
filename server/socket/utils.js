@@ -1,7 +1,12 @@
 import redisClient from "../config/redis.js";
 import { dealCards } from "./game.js";
-import cardSets from "../config/cardSet.json" assert { type: "json" };
+import { readFile } from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const cardSetsRaw = await readFile(path.join(__dirname, "../config/cardSet.json"), "utf-8");
+const cardSets = JSON.parse(cardSetsRaw);
 
 const startGame = async (io, room) => {
     console.log("Starting game");

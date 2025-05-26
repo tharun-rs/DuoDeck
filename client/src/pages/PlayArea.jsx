@@ -12,6 +12,8 @@ const PlayArea = () => {
         currentPlayer,
         playersHandCount,
         socketRoomID,
+        blueScore,
+        redScore,
 
         emitEvents,
     } = useGameSocket();
@@ -19,6 +21,7 @@ const PlayArea = () => {
     // ------------------------------------Use State variables-----------------------------------------------
     const [selectedCard, setSelectedCard] = useState(null);
     const [activeSets, setActiveSets] = useState([]);
+    const [selectedSet, setSelectedSet] = useState(null);
 
     // -------------------------------------Use Effects---------------------------------------------------------
     useEffect(() => {
@@ -28,49 +31,6 @@ const PlayArea = () => {
         setActiveSets(setsWithMatches);
     }, [hand]);
 
-    // -------------------------------------------Handlers--------------------------------------------------------
-    const handleCardClick = (card) => {
-        console.log('Card clicked:', card);
-        setSelectedCard(card === selectedCard ? null : card);
-    };
-
-    const handleOpponentClick = (player) => {
-        console.log(currentPlayer);
-        console.log(playerName);
-        if (playerName !== currentPlayer){
-            alert("Not your turn!!");
-            return;
-        }
-        if (selectedCard) {
-            emitEvents.reqCard(selectedCard,  player);
-            setSelectedCard(null);
-        }
-    };
-
-    // ----------------------------------------------Renderers---------------------------------------------------
-    const renderCardSet = (set) => {
-        return (
-            <div key={set.name} className="card-set">
-                <div className="set-cards">
-                    {set.cards.map(card => {
-                        const isAvailable = hand.includes(card);
-                        return (
-                            <img
-                                key={card}
-                                src={`/cards/${card}.png`}
-                                alt={card}
-                                className={`set-card ${isAvailable ? 'available' :
-                                    `missing ${selectedCard === card ? 'selected-missing' : ''}`}`}
-                                title={isAvailable ? card : `Missing: ${card}`}
-                                onClick={!isAvailable ? () => handleCardClick(card) : undefined}
-                                style={{ cursor: !isAvailable ? 'pointer' : 'default' }}
-                            />
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    };
 
     // ----------------------------------------Utility Methods----------------------------------------------------
     const getTeamColor = (name) => {
@@ -84,10 +44,90 @@ const PlayArea = () => {
         }
     };
 
+    // -------------------------------------------Handlers--------------------------------------------------------
+    const handleCardClick = (card) => {
+        console.log('Card clicked:', card);
+        setSelectedCard(card === selectedCard ? null : card);
+    };
+
+    const handleOpponentClick = (player) => {
+        console.log(currentPlayer);
+        console.log(playerName);
+        if (playerName !== currentPlayer) {
+            alert("Not your turn!!");
+            return;
+        }
+        if (selectedCard) {
+            emitEvents.reqCard(selectedCard, player);
+            setSelectedCard(null);
+        }
+    };
+
+    const handleSetClick = () => {
+        if(!selectedSet) return;
+        console.log('Set clicked:', selectedSet);
+        const teamName = getTeamColor(playerName)[0];
+        const setId = selectedSet.id;
+        console.log('Dropping set:', teamName, setId);
+        emitEvents.dropCard(teamName, setId);
+        setSelectedSet(null);
+    }
+
+    // ----------------------------------------------Renderers---------------------------------------------------
+    const renderCardSet = (set) => {
+        const isSetSelected = selectedSet?.name === set.name;
+
+        return (
+            <div
+                key={set.name}
+                className={`card-set-wrapper ${isSetSelected ? 'selected-set' : ''}`}
+                onClick={(e) => {
+                    // Prevent set click from overriding card click
+                    if (e.target.tagName !== 'IMG') {
+                        setSelectedSet(isSetSelected ? null : set);
+                    }
+                }}
+            >
+                <div className="set-name">{set.name}</div>
+                <div className="set-cards">
+                    {set.cards.map(card => {
+                        const isAvailable = hand.includes(card);
+                        const isCardSelected = selectedCard === card;
+
+                        return (
+                            <img
+                                key={card}
+                                src={`/cards/${card}.png`}
+                                alt={card}
+                                className={`set-card ${isAvailable ? 'available' : 'missing'} ${!isAvailable && isCardSelected ? 'selected-missing' : ''}`}
+                                title={isAvailable ? card : `Missing: ${card}`}
+                                onClick={() => {
+                                    if (!isAvailable) {
+                                        setSelectedCard(isCardSelected ? null : card);
+                                    }
+                                }}
+                                style={{ cursor: !isAvailable ? 'pointer' : 'default' }}
+                            />
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
     // ---------------------------------------------Return----------------------------------------------------------
     return (
         <div className="play-area">
             <h2 className="current-player-header">Room ID: {socketRoomID} | Current Player: {currentPlayer}</h2>
+            <h3 className="current-player-header">Blue Score: {blueScore} | Red Score: {redScore}</h3>
+            {selectedSet && (
+                <button
+                    className="drop-button"
+                    onClick={handleSetClick}
+                >
+                    Drop
+                </button>
+            )}
             <div className="game-layout">
                 <div className="current-player-pane">
                     <h3>Your Hand</h3>
