@@ -14,6 +14,7 @@ export const GameSocket = ({ children }) => {
     const [socketRoomID, setSocketRoomID] = useState("");
     const [blueScore, setBlueScore] = useState(0);
     const [redScore, setRedScore] = useState(0);
+    const [nextPlayerOptions, setNextPlayerOptions] = useState(null);
 
     useEffect(() => {
         socket.connect();
@@ -31,6 +32,7 @@ export const GameSocket = ({ children }) => {
 
         socket.on("current-player", (player) => {
             setCurrentPlayer(player);
+            setNextPlayerOptions(null);
         });
 
         socket.on("room-full", (message) => {
@@ -50,6 +52,11 @@ export const GameSocket = ({ children }) => {
             setRedScore(scores.red);
         });
 
+        socket.on("select-next-player", ({ options }) => {
+            setNextPlayerOptions(options);
+        });
+
+
         return () => {
             socket.disconnect();
         };
@@ -65,6 +72,9 @@ export const GameSocket = ({ children }) => {
         dropCard: (teamName, setID) => {
             socket.emit("drop-set", { teamName, setID });
         },
+        setNextPlayer: (playerName) => {
+            socket.emit("set-next-player", playerName);
+        }
     };
 
     return (
@@ -79,13 +89,15 @@ export const GameSocket = ({ children }) => {
                 socketRoomID,
                 blueScore,
                 redScore,
+                nextPlayerOptions,
 
                 // Emit Events
                 emitEvents,
 
                 // State Setters
                 setPlayerName,
-                setSocketRoomID
+                setSocketRoomID,
+                setNextPlayerOptions,
             }}
         >
             {children}

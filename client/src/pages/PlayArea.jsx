@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "../styles/PlayArea.css";
 import cardSets from '../data/cardSet.json';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useGameSocket } from "../utils/GameSocket";
 
 const PlayArea = () => {
@@ -14,8 +16,11 @@ const PlayArea = () => {
         socketRoomID,
         blueScore,
         redScore,
+        nextPlayerOptions,
 
         emitEvents,
+
+        setNextPlayerOptions,
     } = useGameSocket();
 
     // ------------------------------------Use State variables-----------------------------------------------
@@ -45,16 +50,11 @@ const PlayArea = () => {
     };
 
     // -------------------------------------------Handlers--------------------------------------------------------
-    const handleCardClick = (card) => {
-        console.log('Card clicked:', card);
-        setSelectedCard(card === selectedCard ? null : card);
-    };
-
     const handleOpponentClick = (player) => {
         console.log(currentPlayer);
         console.log(playerName);
         if (playerName !== currentPlayer) {
-            alert("Not your turn!!");
+            toast.error("Not your turn!!");
             return;
         }
         if (selectedCard) {
@@ -64,7 +64,7 @@ const PlayArea = () => {
     };
 
     const handleSetClick = () => {
-        if(!selectedSet) return;
+        if (!selectedSet) return;
         console.log('Set clicked:', selectedSet);
         const teamName = getTeamColor(playerName)[0];
         const setId = selectedSet.id;
@@ -117,67 +117,89 @@ const PlayArea = () => {
 
     // ---------------------------------------------Return----------------------------------------------------------
     return (
-        <div className="play-area">
-            <h2 className="current-player-header">Room ID: {socketRoomID} | Current Player: {currentPlayer}</h2>
-            <h3 className="current-player-header">Blue Score: {blueScore} | Red Score: {redScore}</h3>
-            {selectedSet && (
-                <button
-                    className="drop-button"
-                    onClick={handleSetClick}
-                >
-                    Drop
-                </button>
-            )}
-            <div className="game-layout">
-                <div className="current-player-pane">
-                    <h3>Your Hand</h3>
-                    <div className="sets-container">
-                        {activeSets.length > 0 ? (
-                            activeSets.map(renderCardSet)
-                        ) : (
-                            <p>No Cards available</p>
-                        )}
+        <>
+            <div className="play-area">
+                <h2 className="current-player-header">Room ID: {socketRoomID} | Current Player: {currentPlayer}</h2>
+                <h3 className="current-player-header">Blue Score: {blueScore} | Red Score: {redScore}</h3>
+                {selectedSet && (
+                    <button
+                        className="drop-button"
+                        onClick={handleSetClick}
+                    >
+                        Drop
+                    </button>
+                )}
+                <div className="game-layout">
+                    <div className="current-player-pane">
+                        <h3>Your Hand</h3>
+                        <div className="sets-container">
+                            {activeSets.length > 0 ? (
+                                activeSets.map(renderCardSet)
+                            ) : (
+                                <p>No Cards available</p>
+                            )}
+                        </div>
+                    </div>
+                    <div className="other-players-pane">
+                        {Object.entries(playersHandCount).map(([player, count]) => {
+                            if (player === playerName) return null;
+
+                            const [teamColor, isOpponent] = getTeamColor(player);
+                            const isCurrent = player === currentPlayer;
+
+                            return (
+                                <div
+                                    key={player}
+                                    className={`player-summary ${teamColor} ${selectedCard && isOpponent ? 'missing-card-selected' : ''}`}
+                                    onClick={() => handleOpponentClick(player)}
+                                    style={{
+                                        cursor: selectedCard && isOpponent ? 'pointer' : 'default',
+                                    }}
+                                >
+                                    <h4 className={isCurrent ? "highlight" : ""}>
+                                        {player} - {count} cards
+                                    </h4>
+                                    <div
+                                        className="card-stack"
+                                        style={{ '--card-count': count }}
+                                    >
+                                        {Array.from({ length: count }).map((_, index) => (
+                                            <img
+                                                key={index}
+                                                src="/cards/back.png"
+                                                alt="card back"
+                                                className="card-back"
+                                                style={{ '--card-index': index + 1 }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
-                <div className="other-players-pane">
-                    {Object.entries(playersHandCount).map(([player, count]) => {
-                        if (player === playerName) return null;
-
-                        const [teamColor, isOpponent] = getTeamColor(player);
-                        const isCurrent = player === currentPlayer;
-
-                        return (
-                            <div
+            </div>
+            {nextPlayerOptions && (
+                <div className="modal-backdrop">
+                    <div className="modal">
+                        <h3>Select Next Player</h3>
+                        {nextPlayerOptions.map(player => (
+                            <button
                                 key={player}
-                                className={`player-summary ${teamColor} ${selectedCard && isOpponent ? 'missing-card-selected' : ''}`}
-                                onClick={() => handleOpponentClick(player)}
-                                style={{
-                                    cursor: selectedCard && isOpponent ? 'pointer' : 'default',
+                                className="next-player-button"
+                                onClick={() => {
+                                    emitEvents.setNextPlayer(player); // emits to backend
+                                    setNextPlayerOptions(null);       // closes modal
                                 }}
                             >
-                                <h4 className={isCurrent ? "highlight" : ""}>
-                                    {player} - {count} cards
-                                </h4>
-                                <div
-                                    className="card-stack"
-                                    style={{ '--card-count': count }}
-                                >
-                                    {Array.from({ length: count }).map((_, index) => (
-                                        <img
-                                            key={index}
-                                            src="/cards/back.png"
-                                            alt="card back"
-                                            className="card-back"
-                                            style={{ '--card-index': index + 1 }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
+                                {player}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            </div>
-        </div>
+            )
+            }
+        </>
     );
 };
 

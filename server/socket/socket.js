@@ -138,6 +138,18 @@ const setupSocketEvents = (io, redisClient) => {
                 const roomId = rooms[1];
                 if (!roomId || !teamName || !setID) return;
 
+                // Validate current player
+                const currentPlayerKey = `room:${roomId}:currentPlayer`;
+                const thisPlayerKey = `room:${roomId}:socket:${socket.id}:player`;
+
+                const currentPlayer = await redisClient.get(currentPlayerKey);
+                const thisPlayer = await redisClient.get(thisPlayerKey);
+
+                if (currentPlayer !== thisPlayer) {
+                    socket.emit("backend-error", "Only the current player can drop the set");
+                    return;
+                }
+
                 const set = getSetById(setID);
                 if (!set) {
                     socket.emit("set-drop-result", { success: false, reason: "Invalid set ID" });
@@ -220,11 +232,49 @@ const setupSocketEvents = (io, redisClient) => {
                     io.to(playerSocketId).emit("player-hand", updatedHand);
                 }
 
+                // Get all players again
+                const winningTeamPlayers = players.filter(p => p.team === (missingCards.length > 0 ? opponentTeam : teamName));
+
+                // Emit selection message to the winning team
+                for (const player of winningTeamPlayers) {
+                    const playerSocket = await redisClient.get(`room:${roomId}:player:${player.playerName}:socket`);
+                    io.to(playerSocket).emit("select-next-player", {
+                        options: winningTeamPlayers.map(p => p.playerName)
+                    });
+                }
+
+                // Enable setting next player only once
+                await redisClient.set(`room:${roomId}:setNextPlayerAllowed`, "1");
+
             } catch (error) {
                 console.error("Error dropping set:", error);
                 socket.emit("backend-error", "Failed to drop set");
             }
         });
+
+        // -----------------------------------------------Select Next Player--------------------------------------------------- 
+        socket.on("set-next-player", async (playerName) => {
+            const rooms = Array.from(socket.rooms);
+            const roomId = rooms[1];
+            if (!roomId) return;
+
+            const allowKey = `room:${roomId}:setNextPlayerAllowed`;
+            const isAllowed = await redisClient.get(allowKey);
+
+            if (isAllowed !== "1") {
+                return; // Ignore if not allowed
+            }
+
+            // Set current player
+            await redisClient.set(`room:${roomId}:currentPlayer`, playerName);
+
+            // Notify room
+            io.to(roomId).emit("current-player", playerName);
+
+            // Disallow further changes
+            await redisClient.del(allowKey);
+        });
+
     });
 };
 
