@@ -15,10 +15,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: 
-      context: ./client
-      args:
-          - REACT_APP_SOCKET_URL=http://backend:5000
+    build: ./client
     ports:
       - "3000:80"
     networks:
