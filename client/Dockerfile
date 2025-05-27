@@ -1,18 +1,17 @@
+# Build Stage
 FROM node:22-alpine AS build
-
 WORKDIR /app
+
+ARG REACT_APP_SOCKET_URL
+ENV REACT_APP_SOCKET_URL=$REACT_APP_SOCKET_URL
+
 COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:22-alpine
-
-RUN npm install -g serve
-
-WORKDIR /app
-COPY --from=build /app/build ./build
-
-EXPOSE 3000
-
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Production Stage
+FROM nginx:stable-alpine AS production
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
